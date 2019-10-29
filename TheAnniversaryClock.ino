@@ -87,10 +87,6 @@ void setup()
     udp.begin(localPort);
     Serial.print("Local port: ");
     Serial.println(udp.localPort());
-    
-    //Initialize Display
-    display_cmd_icon();
-    display_clock();
 }
 
 void check_read_cmd()
