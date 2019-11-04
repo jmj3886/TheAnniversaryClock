@@ -1,6 +1,7 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1331.h>
 #include <SPI.h>
+#include <time.h>
 
 // Display definitions
 #define sclk 13
@@ -32,6 +33,7 @@
 #define ANNIVERSARY_DATE_DAY 19
 #define ANNIVERSARY_DATE_MONTH 9
 #define ANNIVERSARY_DATE_YEAR 2020
+#define ANNIVERSARY_EPOCH 1600488000
 
 Adafruit_SSD1331 display = Adafruit_SSD1331(cs, dc, rst);
 const unsigned char HMail_map [] PROGMEM = {
@@ -138,38 +140,51 @@ void display_clock()
         display.fillScreen(BLACK);
         display.drawBitmap(7, 0, H_map, 82, 50, RED);
 
-        get_time();
+        time_t time_diff = get_time();
 
-        unsigned int days = 322;
-        unsigned int years = 0;
+        unsigned int days = 320;
+        String days_string = String(days);
+        float years = 0.0;
+        String years_string = String(years);
         bool is_from = false;
+        unsigned int x_pos = 0;
 
         //Display Years/Days
-        String time_string = "";
-        if(years > 0)
+        String time_string = "";     
+        if((days_string.length() == 3) || (years_string == 3))
+        {
+            x_pos = 25;
+        }
+        else if((days_string.length() == 2) || (years_string == 2))
+        {
+            x_pos = 29;
+        }
+        else if((days_string.length() == 1) || (years_string == 1))
+        {
+            x_pos = 33;
+        }
+        if(years > 1)
         {
             time_string += String(years) + " Years";
         }
-        if((years > 0) && (days > 0))
-        {
-            time_string += " & ";
-        }
-        if(days > 0)
+        if(years < 1)
         {
             time_string += String(days) + " Days";
         }
-        display.setCursor(25,17);
+        display.setCursor(x_pos,17);
         display.setTextColor(MAGENTA);
         display.setTextSize(1);
         display.print(time_string);
 
         //Display To/From
         String direction_string = "To";
+        x_pos = 40;
         if(is_from)
         {
+            x_pos = 36;
             direction_string = "From";
         }
-        display.setCursor(40,31);
+        display.setCursor(x_pos,31);
         display.setTextColor(MAGENTA);
         display.setTextSize(1);
         display.print(direction_string);
@@ -183,8 +198,9 @@ void display_clock()
 }
 
 
-void get_time()
+time_t get_time()
 {
+    return time_t(27601291);
 }
 
 void update_timers()
