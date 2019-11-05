@@ -140,17 +140,27 @@ void display_clock()
         display.fillScreen(BLACK);
         display.drawBitmap(7, 0, H_map, 82, 50, RED);
 
-        time_t time_diff = get_time();
+        uint32_t time_diff = get_time();
 
-        unsigned int days = 320;
-        String days_string = String(days);
-        float years = 0.0;
-        String years_string = String(years);
+        unsigned int days = get_days(time_diff);
+        float years = get_years(time_diff);
+        String days_string = "";
+        String years_string = "";
         bool is_from = false;
         unsigned int x_pos = 0;
 
         //Display Years/Days
-        String time_string = "";     
+        String time_string = "";  
+        if(years >= 1)
+        {
+            String years_string = String(years);
+            time_string += years_string + " Years";
+        }
+        if(years < 1)
+        {
+            String days_string = String(days);
+            time_string += days_string + " Days";
+        }   
         if((days_string.length() == 3) || (years_string == 3))
         {
             x_pos = 25;
@@ -162,14 +172,6 @@ void display_clock()
         else if((days_string.length() == 1) || (years_string == 1))
         {
             x_pos = 33;
-        }
-        if(years > 1)
-        {
-            time_string += String(years) + " Years";
-        }
-        if(years < 1)
-        {
-            time_string += String(days) + " Days";
         }
         display.setCursor(x_pos,17);
         display.setTextColor(MAGENTA);
@@ -197,10 +199,28 @@ void display_clock()
     }
 }
 
-
-time_t get_time()
+unsigned int get_days(uint32_t time_diff)
 {
-    return time_t(27601291);
+    return ceil(time_diff / 60.0 / 60.0 / 24.0);
+}
+
+float get_years(uint32_t time_diff)
+{
+    return time_diff / 60.0 / 60.0 / 24.0 / 365.25;
+}
+
+uint32_t get_time()
+{
+    current_epoch = 1572981550;
+    uint32_t time_diff = 0;
+    if(ANNIVERSARY_EPOCH > current_epoch)
+    {
+        time_diff = ANNIVERSARY_EPOCH - current_epoch;
+    }
+    else
+    {
+        time_diff = current_epoch - ANNIVERSARY_EPOCH;
+    return time_diff;
 }
 
 void update_timers()
