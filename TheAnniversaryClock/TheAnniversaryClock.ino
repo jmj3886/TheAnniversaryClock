@@ -112,7 +112,55 @@ void check_read_cmd()
 
 void read_cmd()
 {
-
+    if(cmd_timer == 0)
+    {
+        //               READ_NEXT_CMD      WAIT_TILL_NEXT_CMD  OPERATION                     OPERATION_MSG
+        // cmd message = [S=Stop/C=Continue][00-60=SecondsToWait][F=Fill/M=Message/H=Heartbeat][...]
+        // Fill message = [0x0=HexColorDef]
+        // Message message = [TextToDisplay]
+        // Heartbeat message = [0-60=SecondsToBeatFor]
+        String cmd = "S10H60";
+        continued_read_status = false;
+        cmd_wait = 0;
+        if(cmd.charAt(0) == 'C')
+        {
+            continued_read_status = true;
+            cmd_wait = int(cmd.substring(1,3));
+        }
+        else
+        {
+            ntp_timer = 0;
+        }
+        switch(cmd.charAt(3))
+        {
+            case 'F':
+                display.fillScreen(strtoul(cmd.substring(4,cmd.length()), 16));
+                break;
+            case 'M':
+                display.fillScreen(BLACK);
+                display.setCursor(5,5);
+                display.setTextColor(MAGENTA);
+                display.setTextSize(1);
+                display.print(cmd.substring(4,cmd.length()));
+                break;
+            case 'H':
+                int heartbeat_timer = 0;
+                while(heartbeart_timer < int(cmd.substring(1,3))
+                {
+                    display.fillScreen(BLACK);
+                    display.drawBitmap(7, 0, H_map, 82, 50, RED);
+                    delay(1000);
+                    display.fillScreen(BLACK);
+                    display.drawBitmap(7, 0, H_map, 82, 50, RED);
+                    delay(500);
+                    display.fillScreen(BLACK);
+                    display.drawBitmap(7, 0, H_map, 82, 50, RED);
+                    delay(500);     
+                    heartbeart_timer += 2;               
+                }
+                break;
+        }
+    }
 }
 
 bool check_waiting_cmd()
@@ -122,7 +170,7 @@ bool check_waiting_cmd()
 
 void display_cmd_icon()
 {
-    if(check_waiting_cmd())
+    if(check_waiting_cmd() && (!continued_read_status))
     {
         if(msg_timer == 0){
             display.drawBitmap(0, 0, HMail_map, 15,10, RED);
@@ -138,7 +186,7 @@ void display_cmd_icon()
 
 void display_clock()
 {
-    if(ntp_timer == 0)
+    if((ntp_timer == 0) && (!continued_read_status))
     {
         display.fillScreen(BLACK);
         display.drawBitmap(7, 0, H_map, 82, 50, RED);
