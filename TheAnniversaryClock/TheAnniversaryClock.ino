@@ -137,11 +137,35 @@ void read_cmd()
                 display.fillScreen(strtoul(cmd.substring(4,cmd.length()), 16));
                 break;
             case 'M':
-                display.fillScreen(BLACK);
-                display.setCursor(5,5);
                 display.setTextColor(MAGENTA);
                 display.setTextSize(1);
-                display.print(cmd.substring(4,cmd.length()));
+                unsigned int char_pos = 4;
+                while(char_pos < cmd.length())
+                {
+                    display.fillScreen(BLACK);
+                    unsigned int line_pos = 1;
+                    while((line_pos < 5) && (char_pos < cmd.length()))
+                    {
+                        String message = cmd.substring(char_pos, cmd.length());
+                        if(message.length() > 24)
+                        {
+                            unsigned int end_pos = 26;
+                            do{
+                                end_pos--;
+                                message = message.substring(0, end_pos);
+                            } while(message.charAt(end_pos) != ' ');
+                            char_pos += end_pos;
+                        }
+                        else
+                        {
+                            char_pos = cmd.length();
+                        }
+                        display.setCursor(5, 5 + (10 * line_pos));
+                        display.println(message.trim());
+                        line++;
+                    }
+                    delay(10000);
+                }
                 break;
             case 'H':
                 int heartbeat_timer = 0;
