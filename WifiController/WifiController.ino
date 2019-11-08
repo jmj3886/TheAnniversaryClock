@@ -1,10 +1,6 @@
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
 
-char ssid[] = "";
-char pass[] = "";
-
-
 unsigned int localPort = 2390;      // local port to listen for UDP packets
 IPAddress timeServerIP; // time.nist.gov NTP server address
 const char* ntpServerName = "time.nist.gov";
@@ -19,10 +15,10 @@ void setup() {
   
   Serial.println("Input SSID: ");
   while(!Serial.available()){}
-  ssid = Serial.readString();
+  String ssid = Serial.readString();
   Serial.println("Input Passcode: ");
   while(!Serial.available()){}
-  pass = Serial.readString();  
+  String pass = Serial.readString();  
     
   // We start by connecting to a WiFi network
   Serial.print("Connecting to ");

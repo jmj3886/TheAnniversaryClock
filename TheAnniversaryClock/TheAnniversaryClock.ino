@@ -153,7 +153,7 @@ void display_clock()
         String time_string = "";  
         if(years >= 1)
         {
-            years_string = String(years);
+            years_string = String(years, 1);
             time_string += years_string + " Years";
         }
         else if(years < 1)
@@ -161,17 +161,21 @@ void display_clock()
             days_string = String(days);
             time_string += days_string + " Days";
         }   
-        if((days_string.length() == 3) || (years_string.length() == 3))
+        if(days_string.length() == 3)
         {
             x_pos = 25;
         }
-        else if((days_string.length() == 2) || (years_string.length() == 2))
+        else if(days_string.length() == 2)
         {
             x_pos = 28;
         }
-        else if((days_string.length() == 1) || (years_string.length() == 1))
+        else if(days_string.length() == 1)
         {
             x_pos = 30;
+        }
+        else if(years_string != "")
+        {
+            x_pos = 22;
         }
         display.setCursor(x_pos,17);
         display.setTextColor(MAGENTA);
@@ -211,7 +215,7 @@ float get_years(uint32_t time_diff)
 
 uint32_t get_time()
 {
-  uint32_t current_epoch = 1632096320;
+  uint32_t current_epoch = 1573091605;
   return current_epoch;
 }
 
