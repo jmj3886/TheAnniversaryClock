@@ -94,6 +94,10 @@ void setup()
     delay(1000);
     
     //Initialize Wifi
+    while(!Serial.available()){}
+    Serial.print(WIFI_NETWORK_NAME)
+    while(!Serial.available()){}
+    Serial.print(WIFI_NETWORK_PASSCODE)
 }
 
 void check_read_cmd()
@@ -215,7 +219,9 @@ float get_years(uint32_t time_diff)
 
 uint32_t get_time()
 {
-  uint32_t current_epoch = 1573091605;
+  Serial.print("T");
+  while(!Serial.available()){}
+  uint32_t current_epoch = strtoul(Serial.readString());
   return current_epoch;
 }
 
