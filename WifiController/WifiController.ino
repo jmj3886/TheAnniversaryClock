@@ -21,25 +21,25 @@ void setup() {
   String pass = Serial.readString();  
     
   // We start by connecting to a WiFi network
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
+  // Debugging - Serial.print("Connecting to ");
+  // Debugging - Serial.println(ssid);
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, pass);
 
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
-    Serial.print(".");
+    // Debugging - Serial.print(".");
   }
-  Serial.println("");
+  // Debugging - Serial.println("");
 
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
+  // Debugging - Serial.println("WiFi connected");
+  // Debugging - Serial.println("IP address: ");
+  // Debugging - Serial.println(WiFi.localIP());
 
-  Serial.println("Starting UDP");
+  // Debugging - Serial.println("Starting UDP");
   udp.begin(localPort);
-  Serial.print("Local port: ");
-  Serial.println(udp.localPort());
+  // Debugging - Serial.print("Local port: ");
+  // Debugging - Serial.println(udp.localPort());
 }
 
 void loop() {
@@ -57,10 +57,10 @@ void loop() {
 
           int cb = udp.parsePacket();
           if (!cb) {
-            Serial.println("no packet yet");
+            // Debugging - Serial.println("no packet yet");
           } else {
-            Serial.print("packet received, length=");
-            Serial.println(cb);
+            // Debugging - Serial.print("packet received, length=");
+            // Debugging - Serial.println(cb);
             // We've received a packet, read the data from it
             udp.read(packetBuffer, NTP_PACKET_SIZE); // read the packet into the buffer
 
@@ -72,34 +72,16 @@ void loop() {
             // combine the four bytes (two words) into a long integer
             // this is NTP time (seconds since Jan 1 1900):
             unsigned long secsSince1900 = highWord << 16 | lowWord;
-            Serial.print("Seconds since Jan 1 1900 = ");
-            Serial.println(secsSince1900);
+            // Debugging - Serial.println(secsSince1900);
 
             // now convert NTP time into everyday time:
-            Serial.print("Unix time = ");
+            // Debugging - Serial.print("Unix time = ");
             // Unix time starts on Jan 1 1970. In seconds, that's 2208988800:
             const unsigned long seventyYears = 2208988800UL;
             // subtract seventy years:
             unsigned long epoch = secsSince1900 - seventyYears;
             // print Unix time:
             Serial.println(epoch);
-
-
-            // print the hour, minute and second:
-            Serial.print("The UTC time is ");       // UTC is the time at Greenwich Meridian (GMT)
-            Serial.print((epoch  % 86400L) / 3600); // print the hour (86400 equals secs per day)
-            Serial.print(':');
-            if (((epoch % 3600) / 60) < 10) {
-              // In the first 10 minutes of each hour, we'll want a leading '0'
-              Serial.print('0');
-            }
-            Serial.print((epoch  % 3600) / 60); // print the minute (3600 equals secs per minute)
-            Serial.print(':');
-            if ((epoch % 60) < 10) {
-              // In the first 10 seconds of each minute, we'll want a leading '0'
-              Serial.print('0');
-            }
-            Serial.println(epoch % 60); // print the second
           }
         }
         else if(cmd == "M")
@@ -110,7 +92,7 @@ void loop() {
 
 // send an NTP request to the time server at the given address
 void sendNTPpacket(IPAddress& address) {
-  Serial.println("sending NTP packet...");
+  // Debugging - Serial.println("sending NTP packet...");
   // set all bytes in the buffer to 0
   memset(packetBuffer, 0, NTP_PACKET_SIZE);
   // Initialize values needed to form NTP request
