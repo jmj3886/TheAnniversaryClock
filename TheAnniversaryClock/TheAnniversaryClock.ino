@@ -1,6 +1,7 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1331.h>
 #include <SPI.h>
+#include <SoftwareSerial.h>
 
 // Display definitions
 #define sclk 13
@@ -78,15 +79,19 @@ const unsigned char H_map [] PROGMEM = {
 };
 
 bool continued_read_status = false;
+bool cmd_read_status = false;
+bool waiting_cmd = true;
 unsigned int cmd_timer = 0;
 unsigned int ntp_timer = 0;
 unsigned int cmd_wait = 0;
 unsigned int msg_timer = 0;
+SoftwareSerial wifi_controller(3,4);
 
 void setup()
 {
     //Setup Read Cmd Button
     pinMode(READ_CMD_BUTTON_PIN, INPUT);
+    attachInterrupt(digitalPinToInterrupt(READ_CMD_BUTTON_PIN), set_read_cmd, HIGH);
     
     //Begin Display
     display.begin();
@@ -94,21 +99,42 @@ void setup()
     delay(1000);
     
     //Initialize Wifi
-    while(!Serial.available()){}
-    Serial.print(WIFI_NETWORK_NAME)
-    while(!Serial.available()){}
-    Serial.print(WIFI_NETWORK_PASSCODE)
+    Serial.begin(9600);
+    Serial.println("Initialize Wifi");
+    wifi_controller.begin(115200);
+    wait_for_wifi_response();
+    wifi_controller.readString();
+    wifi_controller.print(WIFI_NETWORK_NAME);
+    Serial.println("Sent SSID");
+    wait_for_wifi_response();
+    wifi_controller.readString();
+    wifi_controller.print(WIFI_NETWORK_PASSCODE);
+    Serial.println("Sent Passcode");
+    wait_for_wifi_response();
+    wifi_controller.readString();
+}
+
+void wait_for_wifi_response()
+{
+    while(!wifi_controller.available())
+    {
+    delay(250);
+    }
 }
 
 void check_read_cmd()
 {
-    int status = digitalRead(READ_CMD_BUTTON_PIN);
-    if((status == 0) || (continued_read_status))
+    if((cmd_read_status) || (continued_read_status))
     {
+        cmd_read_status = false;
         read_cmd();
     }
 }
 
+void set_read_cmd()
+{
+    cmd_read_status = true;
+}
 
 void read_cmd()
 {
@@ -120,12 +146,13 @@ void read_cmd()
         // Message message = [TextToDisplay]
         // Heartbeat message = [0-60=SecondsToBeatFor]
         String cmd = "S10H60";
+        waiting_cmd = false;
         continued_read_status = false;
         cmd_wait = 0;
         if(cmd.charAt(0) == 'C')
         {
             continued_read_status = true;
-            cmd_wait = int(cmd.substring(1,3));
+            cmd_wait = cmd.substring(1,3).toInt();
         }
         else
         {
@@ -134,62 +161,73 @@ void read_cmd()
         switch(cmd.charAt(3))
         {
             case 'F':
-                display.fillScreen(strtoul(cmd.substring(4,cmd.length()), 16));
+            {
+                display.fillScreen(strtoul(cmd.substring(4,cmd.length()).c_str(), NULL, 16));
                 break;
+            }
             case 'M':
-                display.setTextColor(MAGENTA);
-                display.setTextSize(1);
+            {
                 unsigned int char_pos = 4;
                 while(char_pos < cmd.length())
                 {
                     display.fillScreen(BLACK);
-                    unsigned int line_pos = 1;
-                    while((line_pos < 5) && (char_pos < cmd.length()))
+                    int line_pos = 1;
+                    while((line_pos < 6) && (char_pos < cmd.length()))
                     {
                         String message = cmd.substring(char_pos, cmd.length());
-                        if(message.length() > 24)
+                        if(message.length() > 14)
                         {
-                            unsigned int end_pos = 26;
+                            int end_pos = 16;
                             do{
                                 end_pos--;
                                 message = message.substring(0, end_pos);
-                            } while(message.charAt(end_pos) != ' ');
+                            } while(message.charAt(end_pos - 1) != ' ');
                             char_pos += end_pos;
                         }
                         else
                         {
                             char_pos = cmd.length();
                         }
-                        display.setCursor(5, 5 + (10 * line_pos));
-                        display.println(message.trim());
-                        line++;
+                        message.trim();
+                        display.setTextColor(MAGENTA);
+                        display.setTextSize(1);
+                        display.setCursor((96 - (message.length() * 5.8)) / 2, (10 * line_pos));
+                        display.println(message);
+                        line_pos++;
                     }
                     delay(10000);
                 }
                 break;
+            }
             case 'H':
+            {
+                display.fillScreen(BLACK);
                 int heartbeat_timer = 0;
-                while(heartbeart_timer < int(cmd.substring(1,3))
+                while(heartbeat_timer < cmd.substring(4,cmd.length()).toInt())
                 {
-                    display.fillScreen(BLACK);
-                    display.drawBitmap(7, 0, H_map, 82, 50, RED);
-                    delay(1000);
-                    display.fillScreen(BLACK);
                     display.drawBitmap(7, 0, H_map, 82, 50, RED);
                     delay(500);
                     display.fillScreen(BLACK);
+                    delay(500);
                     display.drawBitmap(7, 0, H_map, 82, 50, RED);
-                    delay(500);     
-                    heartbeart_timer += 2;               
+                    delay(250);
+                    display.fillScreen(BLACK);
+                    delay(250);
+                    display.drawBitmap(7, 0, H_map, 82, 50, RED);
+                    delay(250);
+                    display.fillScreen(BLACK);
+                    delay(250);
+                    heartbeat_timer += 2;               
                 }
                 break;
+            }
         }
     }
 }
 
 bool check_waiting_cmd()
 {
-  return false;
+  return waiting_cmd;
 }
 
 void display_cmd_icon()
@@ -291,9 +329,13 @@ float get_years(uint32_t time_diff)
 
 uint32_t get_time()
 {
-  Serial.print("T");
-  while(!Serial.available()){}
-  uint32_t current_epoch = strtoul(Serial.readString());
+  wifi_controller.print("T");
+  wait_for_wifi_response();
+  String message = wifi_controller.readString();
+  Serial.println("*");
+  Serial.println(String("|")+message+String("|"));
+  Serial.println("*");
+  uint32_t current_epoch = strtoul(message.c_str(), NULL, 10);
   return current_epoch;
 }
 

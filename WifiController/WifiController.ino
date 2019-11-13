@@ -6,18 +6,21 @@ IPAddress timeServerIP; // time.nist.gov NTP server address
 const char* ntpServerName = "time.nist.gov";
 const int NTP_PACKET_SIZE = 48; // NTP time stamp is in the first 48 bytes of the message
 byte packetBuffer[ NTP_PACKET_SIZE]; //buffer to hold incoming and outgoing packets
+bool inside_mol = false;
 
 // A UDP instance to let us send and receive packets over UDP
 WiFiUDP udp;
 
 void setup() {
   Serial.begin(115200);
+
+  delay(5000);
   
   Serial.println("Input SSID: ");
-  while(!Serial.available()){}
+  wait_for_response();
   String ssid = Serial.readString();
   Serial.println("Input Passcode: ");
-  while(!Serial.available()){}
+  wait_for_response();
   String pass = Serial.readString();  
     
   // We start by connecting to a WiFi network
@@ -32,7 +35,7 @@ void setup() {
   }
   // Debugging - Serial.println("");
 
-  // Debugging - Serial.println("WiFi connected");
+  //Debugging - Serial.println("WiFi connected");
   // Debugging - Serial.println("IP address: ");
   // Debugging - Serial.println(WiFi.localIP());
 
@@ -42,9 +45,23 @@ void setup() {
   // Debugging - Serial.println(udp.localPort());
 }
 
-void loop() {
+void wait_for_response()
+{
+    while(!Serial.available())
+    {
+    delay(100);
+    }
+}
+
+void loop() {  
+    if(!inside_mol)
+    {
+        Serial.println("WiFi connected");
+        inside_mol = true;
+    }
     if(Serial.available())
     {
+      delay(250);
         String cmd = Serial.readString();
         if(cmd == "T")
         {
